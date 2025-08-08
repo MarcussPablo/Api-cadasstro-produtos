@@ -15,6 +15,12 @@ const pool = new Pool({
 
 const port = process.env.PORT || 3000;
 
+// Middleware de log simples
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 app.get('/', (req, res) => {
   res.send('API com Neon rodando 🚀');
 });
@@ -32,6 +38,16 @@ app.get('/create-table', async (req, res) => {
   } catch (err) {
     console.error('Erro no /create-table:', err);
     res.status(500).json({ error: err.message || 'Erro ao criar tabela' });
+  }
+});
+
+app.get('/teste', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    res.json({ time: result.rows[0] });
+  } catch (err) {
+    console.error('Erro no /teste:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
