@@ -1,23 +1,22 @@
-import dotenv from 'dotenv'
-dotenv.config()
-import express from 'express'
+import dotenv from 'dotenv';
+dotenv.config();
+import express from 'express';
 import { Pool } from 'pg';
 import cors from 'cors';
-
-
-
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Conexão com Neon
+// Configura conexão com banco
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
 
-// Teste inicial
+const port = process.env.PORT || 3000;
+
+// Rota teste
 app.get('/', (req, res) => {
   res.send('API com Neon rodando 🚀');
 });
@@ -34,7 +33,7 @@ app.get('/create-table', async (req, res) => {
     `);
     res.send('Tabela criada com sucesso!');
   } catch (err) {
-    console.error(err);
+    console.error('Erro no /create-table:', err);
     res.status(500).send('Erro ao criar tabela');
   }
 });
@@ -42,6 +41,11 @@ app.get('/create-table', async (req, res) => {
 // CREATE
 app.post('/produtos', async (req, res) => {
   const { nome, preco } = req.body;
+
+  if (!nome || preco == null || isNaN(preco)) {
+    return res.status(400).json({ error: 'Nome e preço são obrigatórios e preço deve ser número' });
+  }
+
   try {
     const result = await pool.query(
       'INSERT INTO produtos (nome, preco) VALUES ($1, $2) RETURNING *',
@@ -49,7 +53,7 @@ app.post('/produtos', async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('Erro no POST /produtos:', err);
     res.status(500).send('Erro ao inserir produto');
   }
 });
@@ -60,7 +64,7 @@ app.get('/produtos', async (req, res) => {
     const result = await pool.query('SELECT * FROM produtos');
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    console.error('Erro no GET /produtos:', err);
     res.status(500).send('Erro ao buscar produtos');
   }
 });
@@ -69,6 +73,11 @@ app.get('/produtos', async (req, res) => {
 app.put('/produtos/:id', async (req, res) => {
   const { id } = req.params;
   const { nome, preco } = req.body;
+
+  if (!nome || preco == null || isNaN(preco)) {
+    return res.status(400).json({ error: 'Nome e preço são obrigatórios e preço deve ser número' });
+  }
+
   try {
     const result = await pool.query(
       'UPDATE produtos SET nome=$1, preco=$2 WHERE id=$3 RETURNING *',
@@ -76,7 +85,7 @@ app.put('/produtos/:id', async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('Erro no PUT /produtos/:id:', err);
     res.status(500).send('Erro ao atualizar produto');
   }
 });
@@ -88,11 +97,11 @@ app.delete('/produtos/:id', async (req, res) => {
     await pool.query('DELETE FROM produtos WHERE id=$1', [id]);
     res.send('Produto removido com sucesso');
   } catch (err) {
-    console.error(err);
+    console.error('Erro no DELETE /produtos/:id:', err);
     res.status(500).send('Erro ao remover produto');
   }
 });
 
-app.listen(process.env.PORT, () => {
-  console.log(`Servidor rodando na porta http://localhost:${process.env.PORT}`);
+app.listen(port, () => {
+  console.log(`Servidor rodando na porta http://localhost:${port}`);
 });
