@@ -15,6 +15,26 @@ const pool = new Pool({
 
 const port = process.env.PORT || 3000;
 
+// Função para criar a tabela ao iniciar
+async function createTable() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS produtos (
+        id SERIAL PRIMARY KEY,
+        nome TEXT NOT NULL,
+        preco NUMERIC NOT NULL,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ Tabela "produtos" verificada/criada com sucesso!');
+  } catch (err) {
+    console.error('❌ Erro ao criar tabela:', err);
+  }
+}
+
+// Executa a criação da tabela antes de iniciar o servidor
+createTable();
+
 // Middleware de log simples
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -23,22 +43,6 @@ app.use((req, res, next) => {
 
 app.get('/', (req, res) => {
   res.send('API com Neon rodando 🚀');
-});
-
-app.get('/create-table', async (req, res) => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS produtos (
-        id SERIAL PRIMARY KEY,
-        nome TEXT NOT NULL,
-        preco NUMERIC NOT NULL
-      )
-    `);
-    res.send('Tabela criada com sucesso!');
-  } catch (err) {
-    console.error('Erro no /create-table:', err);
-    res.status(500).json({ error: err.message || 'Erro ao criar tabela' });
-  }
 });
 
 app.get('/teste', async (req, res) => {
@@ -112,5 +116,5 @@ app.delete('/produtos/:id', async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Servidor rodando na porta http://localhost:${port}`);
+  console.log(`🚀 Servidor rodando na porta ${port}`);
 });
