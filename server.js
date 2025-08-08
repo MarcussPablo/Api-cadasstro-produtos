@@ -8,7 +8,6 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Configura conexão com banco
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
@@ -16,12 +15,10 @@ const pool = new Pool({
 
 const port = process.env.PORT || 3000;
 
-// Rota teste
 app.get('/', (req, res) => {
   res.send('API com Neon rodando 🚀');
 });
 
-// Criar tabela
 app.get('/create-table', async (req, res) => {
   try {
     await pool.query(`
@@ -34,11 +31,10 @@ app.get('/create-table', async (req, res) => {
     res.send('Tabela criada com sucesso!');
   } catch (err) {
     console.error('Erro no /create-table:', err);
-    res.status(500).send('Erro ao criar tabela');
+    res.status(500).json({ error: err.message || 'Erro ao criar tabela' });
   }
 });
 
-// CREATE
 app.post('/produtos', async (req, res) => {
   const { nome, preco } = req.body;
 
@@ -54,22 +50,20 @@ app.post('/produtos', async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Erro no POST /produtos:', err);
-    res.status(500).send('Erro ao inserir produto');
+    res.status(500).json({ error: err.message || 'Erro ao inserir produto' });
   }
 });
 
-// READ
 app.get('/produtos', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM produtos');
     res.json(result.rows);
   } catch (err) {
     console.error('Erro no GET /produtos:', err);
-    res.status(500).send('Erro ao buscar produtos');
+    res.status(500).json({ error: err.message || 'Erro ao buscar produtos' });
   }
 });
 
-// UPDATE
 app.put('/produtos/:id', async (req, res) => {
   const { id } = req.params;
   const { nome, preco } = req.body;
@@ -86,11 +80,10 @@ app.put('/produtos/:id', async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Erro no PUT /produtos/:id:', err);
-    res.status(500).send('Erro ao atualizar produto');
+    res.status(500).json({ error: err.message || 'Erro ao atualizar produto' });
   }
 });
 
-// DELETE
 app.delete('/produtos/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -98,7 +91,7 @@ app.delete('/produtos/:id', async (req, res) => {
     res.send('Produto removido com sucesso');
   } catch (err) {
     console.error('Erro no DELETE /produtos/:id:', err);
-    res.status(500).send('Erro ao remover produto');
+    res.status(500).json({ error: err.message || 'Erro ao remover produto' });
   }
 });
 
